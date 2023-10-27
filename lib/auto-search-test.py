@@ -100,16 +100,8 @@ cur_list = list(search_tuples)
 
 update_list = prev_list[:]
 insert_list = cur_list[:]
-i = 0
-j = 0
 for current in cur_list:
-
-    i = i + 1
-    j = 0
     for prev in prev_list:
-        j = j + 1
-        print(i, j)
-        print('대상' , prev, current)
         if (prev[1] == current[2] and prev[2] == current[4]):
             print('겹친다' , prev, current)
             update_list.remove(prev)
