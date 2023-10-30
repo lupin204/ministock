@@ -124,5 +124,18 @@ conn.commit()
 
 conn.close()
 
+
+# 주식계좌 ##################################################
+accounts = kiwoom.GetLoginInfo("ACCNO")
+stock_account = accounts[0]
+
+for new_stock in insert_list:
+    # 삼성전자, 2주, 시장가주문("03") 매수
+    kiwoom.SendOrder("시장가매수", "0101", stock_account, 1, new_stock[4], 2, 0, "03", "")
+
+
+# 삼성전자, 10주, 시장가주문 매도
+# kiwoom.SendOrder("시장가매도", "0101", stock_account, 2, "005930", 10, 0, "03", "")
+
 print(f"auto-search end")
 
