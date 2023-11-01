@@ -134,7 +134,7 @@ print(insert_list)
 for prev in update_list:
     cur.execute("UPDATE auto_search SET end_time = %s WHERE id = %s", (base_hm, prev[0]))
  
-conn.commit()   
+conn.commit()
 
 
 # insert #######################################
@@ -148,44 +148,45 @@ if (insert_list):
     print('postrgresql insert end')
 
 
+
 ########################################################################################
-# fdr 종목정보
-print(f"finance-data start")
-# df_kospi = fdr.StockListing("KOSPI")[0:10]
-df_kospi = fdr.StockListing("KOSPI")
-df_kosdaq = fdr.StockListing("KOSDAQ")
-print(f"finance-data end")
+# 키움 매수
 
-# columns, index, records, values, split
-kospi_json_str = df_kospi.to_json(orient='records', indent=0, force_ascii=False)
-kosdaq_json_str = df_kosdaq.to_json(orient='records', indent=0, force_ascii=False)
+# 하나의 종목이 돈맥,홍삼 여러개 잡혀도 1번만 매수
+buy_temp_dicts = {}
+for tup in insert_list:
+    key = tup[4]  #('20239999', '2222', '001', '돈맥', '207940', '207940', '207940')
+    if key not in buy_temp_dicts:
+        buy_temp_dicts[key] = tup
 
-kospi_json_arr = json.loads(kospi_json_str)
-kosdaq_json_arr = json.loads(kosdaq_json_str)
-krx_json_arr = kospi_json_arr + kosdaq_json_arr
-
-krx_dict = {item['Code']: item for item in krx_json_arr}
+buy_list = list(buy_temp_dicts.values())
 
 
 # 매수는 최대 40만원 1주가 40만원 초과면 1주 매수
 max_money_per_stock = 400000
+# 10만원 이상 종목은 1주 덜산다 (floor로 )
+high_price_stock = 100000
 
-for elem in insert_list:
+for elem in buy_list:
     new_ticker = elem[4]
     ticker_info = fdr.DataReader(new_ticker, base_y_m_d)
     print(ticker_info)
     
     # 양봉 9% 미만이면 시장가 매수
     if (int(ticker_info['Change']*100) < 9):
+        print('시장가', ticker_info)
         buy_volume = math.ceil(max_money_per_stock / int(ticker_info['Close']))
         # 삼성전자, 10주, 시장가주문 매수
         kiwoom.SendOrder("시장가매수", "0101", stock_account, 1, new_ticker, buy_volume, 0, "03", "")
     
     # 양봉 9% 이상이면 오른가격의 절반 가격으로 지정가주문("03") 매수 (10% 오르면 5%가격으로 지정가 주문)
     else:
+        print('지정가', ticker_info)
         gap_price = int(ticker_info['Close']) - int(ticker_info['Open'])
         buy_price = int(ticker_info['Close']) - int(gap_price / 2)
         buy_volume = math.ceil(max_money_per_stock / buy_price)
+        if (buy_volume > high_price_stock):
+            buy_volume = math.floor(max_money_per_stock / buy_price)
         # 삼성전자, 10주, 지정가주문("00") 매수
         kiwoom.SendOrder("지정가매수", "0101", stock_account, 1, new_ticker, buy_volume, buy_price, "00", "")
 
