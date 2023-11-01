@@ -16,17 +16,6 @@ def create_table():
     print('START create table')
     
 
-    cur.execute("CREATE SEQUENCE seq_auto_search_id \
-        INCREMENT 1 \
-        START 1 \
-        MINVALUE 1 \
-        MAXVALUE 9223372036854775807 \
-        CACHE 1")
-    conn.commit()
-    
-    
-    
-
     # ['Code': '005930', 'ISU_CD': 'KR7005930003', 'Name': '삼성전자', 'Market': 'KOSPI', 'Dept': '', 'Close': '67100', 
     # 'ChangeCode': '2', 'Changes': -1100, 'ChagesRatio': -1.61, 'Open': 67100, 'High': 67400, 'Low': 66900, 'Volume': 7032462, 
     # 'Amount': 471934306900, 'Marcap': 400572409105000, 'Stocks': 5969782550, 'MarketId': 'STK'}, ... ]
@@ -57,10 +46,37 @@ def create_table():
         formula_id VARCHAR, formula_name VARCHAR, stock_code VARCHAR, stock_name VARCHAR, market VARCHAR)")
     conn.commit()
     
+    
+    # (1, "231018", "0910", "1500", "001", "돈맥", "005930", "삼성전자", "KOSPI", 12000, 30, 360000)
+    cur.execute("CREATE TABLE IF NOT EXISTS buy_sell_history \
+        (id INTEGER NOT NULL DEFAULT nextval('seq_buy_sell_history_id'::regclass) PRIMARY KEY , \
+        base_ymd VARCHAR, buy_time VARCHAR, sell_time VARCHAR, \
+        formula_id VARCHAR, formula_name VARCHAR, stock_code VARCHAR, stock_name VARCHAR, market VARCHAR, \
+        price INT, volume INT, amount INT )")
+    conn.commit()
+    
     cur.close()
     conn.close()
     print('END create table')
     
+    
+def create_sequence():
+    
+    cur.execute("CREATE SEQUENCE seq_auto_search_id \
+    INCREMENT 1 \
+    START 1 \
+    MINVALUE 1 \
+    MAXVALUE 9223372036854775807 \
+    CACHE 1")
+    conn.commit()
+    
+    cur.execute("CREATE SEQUENCE seq_buy_sell_history_id \
+    INCREMENT 1 \
+    START 1 \
+    MINVALUE 1 \
+    MAXVALUE 9223372036854775807 \
+    CACHE 1")
+    conn.commit()
 
 def truncate_table():
     cur.execute("TRUNCATE")
@@ -71,5 +87,7 @@ def truncate_table():
 # None=NULL, int=INTEGER, float=REAL, str=TEXT, bytes=BLOB
 if (__name__ == '__main__') :
     # truncate_table()
+    # create_sequence()
     create_table()
+
     

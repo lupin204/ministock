@@ -4,28 +4,15 @@ import sqlite3
 import FinanceDataReader as fdr
 import json
 import math
-import psycopg2
 
 
 # db
 conn = sqlite3.connect('d:/myprjs/ministock/lib/ministock.db')
 cur = conn.cursor()
 
-# db postgresql
-conn = psycopg2.connect(
-    host='arjuna.db.elephantsql.com',
-    dbname='fziardgc',
-    user='fziardgc',
-    password='IjiuOJhm1mxFW_gnVOwlhbbbJKfhO_rU',
-    port=5432
-)
-
-cur = conn.cursor()
-
 # base
 search_tuples = []
 base_ymd = datetime.today().strftime('%Y%m%d')
-base_y_m_d = datetime.today().strftime('%Y-%m-%d')
 base_hm = datetime.today().strftime('%H%M')
 
 # stocks info
@@ -35,7 +22,7 @@ stocks_dicts = dict((x,y) for x, y in stocks_tuples) # {'005930':'삼성전자'}
 
 cur.execute("select id, formula_id, stock_code \
     from auto_search \
-    where base_ymd = to_char(now(), 'YYYYMMDD') \
+    where base_ymd = strftime('%Y%m%d', 'now') \
     and end_time is null")
 prev_tuples = cur.fetchall()
 
@@ -123,7 +110,7 @@ insert_list = cur_list[:]
 for current in cur_list:
     for prev in prev_list:
         if (prev[1] == current[2] and prev[2] == current[4]):
-            print('겹친다' , prev, current, len(update_list), len(prev_list), len(insert_list), len(cur_list))
+            print('겹친다' , prev, current)
             update_list.remove(prev)
             insert_list.remove(current)
 
@@ -131,67 +118,17 @@ print('=========================================')
 print(update_list)
 print(insert_list)
 
-for prev in update_list:
-    cur.execute("UPDATE auto_search SET end_time = %s WHERE id = %s", (base_hm, prev[0]))
- 
-conn.commit()   
-
+# for prev in update_list:
+#     cur.execute("UPDATE auto_search SET end_time = ? WHERE id = ?", (base_hm, prev[0]))
+# conn.commit()   
 
 # insert #######################################
-# insert_list = [('20239999', '2222', '001', '돈맥', '207940', '207940', '207940'), ('20239999', '2222', '001', '돈맥', '005380', '005380', '005380')]
-if (insert_list):
-    print('postgresql insert start')
-    args = ','.join(cur.mogrify("(%s, %s, %s, %s, %s, (SELECT name FROM stocks WHERE code = %s), (SELECT market FROM stocks WHERE code = %s) )", i).decode("utf-8")
-                    for i in insert_list)
-    cur.execute("INSERT INTO auto_search (base_ymd, start_time, formula_id, formula_name, stock_code, stock_name, market) VALUES " + (args))
-    conn.commit()
-    print('postrgresql insert end')
+# cur.executemany(
+#     'INSERT INTO auto_search (base_ymd, start_time, formula_id, formula_name, stock_code, stock_name, market) \
+#     SELECT ?, ?, ?, ?, ?, (SELECT name FROM stocks WHERE code = ?), (SELECT market FROM stocks WHERE code = ?)', insert_list)
+# conn.commit()
 
-
-########################################################################################
-# fdr 종목정보
-print(f"finance-data start")
-# df_kospi = fdr.StockListing("KOSPI")[0:10]
-df_kospi = fdr.StockListing("KOSPI")
-df_kosdaq = fdr.StockListing("KOSDAQ")
-print(f"finance-data end")
-
-# columns, index, records, values, split
-kospi_json_str = df_kospi.to_json(orient='records', indent=0, force_ascii=False)
-kosdaq_json_str = df_kosdaq.to_json(orient='records', indent=0, force_ascii=False)
-
-kospi_json_arr = json.loads(kospi_json_str)
-kosdaq_json_arr = json.loads(kosdaq_json_str)
-krx_json_arr = kospi_json_arr + kosdaq_json_arr
-
-krx_dict = {item['Code']: item for item in krx_json_arr}
-
-
-# 매수는 최대 40만원 1주가 40만원 초과면 1주 매수
-max_money_per_stock = 400000
-
-for elem in insert_list:
-    new_ticker = elem[4]
-    ticker_info = fdr.DataReader(new_ticker, base_y_m_d)
-    print(ticker_info)
-    
-    # 양봉 9% 미만이면 시장가 매수
-    if (int(ticker_info['Change']*100) < 9):
-        buy_volume = math.ceil(max_money_per_stock / int(ticker_info['Close']))
-        # 삼성전자, 10주, 시장가주문 매수
-        kiwoom.SendOrder("시장가매수", "0101", stock_account, 1, new_ticker, buy_volume, 0, "03", "")
-    
-    # 양봉 9% 이상이면 오른가격의 절반 가격으로 지정가주문("03") 매수 (10% 오르면 5%가격으로 지정가 주문)
-    else:
-        gap_price = int(ticker_info['Close']) - int(ticker_info['Open'])
-        buy_price = int(ticker_info['Close']) - int(gap_price / 2)
-        buy_volume = math.ceil(max_money_per_stock / buy_price)
-        # 삼성전자, 10주, 지정가주문("00") 매수
-        kiwoom.SendOrder("지정가매수", "0101", stock_account, 1, new_ticker, buy_volume, buy_price, "00", "")
-
-            
-
-
-
-cur.close()
 conn.close()
+
+print(f"auto-search end")
+
