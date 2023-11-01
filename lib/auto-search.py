@@ -60,7 +60,7 @@ kiwoom.GetConditionLoad()
 conditions = kiwoom.GetConditionNameList()
 
 # 0번 조건식에 해당하는 종목 리스트 출력
-print(conditions)
+# print(conditions)
 
 condition_index = conditions[0][0]
 condition_name = conditions[0][1]
@@ -68,8 +68,8 @@ codes = kiwoom.SendCondition("0101", condition_name, condition_index, 0)
 
 
 
+# print(codes)
 print(condition_index, condition_name)
-print(codes)
 for ticker in codes:
     search_tuples.append((base_ymd, base_hm, condition_index, condition_name, ticker, ticker, ticker))
     print(ticker, stocks_dicts[ticker])
@@ -79,8 +79,8 @@ condition_index = conditions[1][0]
 condition_name = conditions[1][1]
 codes = kiwoom.SendCondition("0101", condition_name, condition_index, 0)
 
+# print(codes)
 print(condition_index, condition_name)
-print(codes)
 for ticker in codes:
     search_tuples.append((base_ymd, base_hm, condition_index, condition_name, ticker, ticker, ticker))
     print(ticker, stocks_dicts[ticker])
@@ -90,8 +90,8 @@ condition_index = conditions[2][0]
 condition_name = conditions[2][1]
 codes = kiwoom.SendCondition("0101", condition_name, condition_index, 0)
 
+# print(codes)
 print(condition_index, condition_name)
-print(codes)
 for ticker in codes:
     search_tuples.append((base_ymd, base_hm, condition_index, condition_name, ticker, ticker, ticker))
     print(ticker, stocks_dicts[ticker])
@@ -101,8 +101,8 @@ condition_index = conditions[3][0]
 condition_name = conditions[3][1]
 codes = kiwoom.SendCondition("0101", condition_name, condition_index, 0)
 
+# print(codes)
 print(condition_index, condition_name)
-print(codes)
 for ticker in codes:
     search_tuples.append((base_ymd, base_hm, condition_index, condition_name, ticker, ticker, ticker))
     print(ticker, stocks_dicts[ticker])
@@ -174,14 +174,14 @@ for elem in buy_list:
     
     # 양봉 9% 미만이면 시장가 매수
     if (int(ticker_info['Change']*100) < 9):
-        print('시장가', ticker_info)
+        # print('시장가', ticker_info)
         buy_volume = math.ceil(max_money_per_stock / int(ticker_info['Close']))
         # 삼성전자, 10주, 시장가주문 매수
         kiwoom.SendOrder("시장가매수", "0101", stock_account, 1, new_ticker, buy_volume, 0, "03", "")
     
     # 양봉 9% 이상이면 오른가격의 절반 가격으로 지정가주문("03") 매수 (10% 오르면 5%가격으로 지정가 주문)
     else:
-        print('지정가', ticker_info)
+        # print('지정가', ticker_info)
         gap_price = int(ticker_info['Close']) - int(ticker_info['Open'])
         buy_price = int(ticker_info['Close']) - int(gap_price / 2)
         buy_volume = math.ceil(max_money_per_stock / buy_price)
